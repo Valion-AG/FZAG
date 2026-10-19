@@ -1,0 +1,23 @@
+# Choose ONE: all-sites root for connected administration, OR individual
+# runtime-namespaces executions with separate states (required for true airgap).
+# No credentials belong in this example or Git.
+sites = {
+  azure = {
+    kubeconfig_path = "C:/PRIVATE/azure-kubeconfig"
+    kube_context = "fzag-azure-runtime"
+    platform = "aks"
+  }
+  zrh = {
+    kubeconfig_path = "C:/PRIVATE/zrh-kubeconfig"
+    kube_context = "fzag-zrh-runtime"
+    platform = "openshift"
+  }
+  mcdp = {
+    kubeconfig_path = "C:/PRIVATE/mcdp-kubeconfig"
+    kube_context = "fzag-mcdp-runtime"
+    platform = "openshift"
+  }
+}
+approved_for_cluster_changes = false
+# Enable only for a connected test lab. Leave false for production/true airgap.
+connected_lab_mode = false

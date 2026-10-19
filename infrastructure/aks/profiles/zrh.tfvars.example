@@ -1,0 +1,8 @@
+# Example only: select the actual hosting/DNS profile after the platform decision.
+# Execute runtime-namespaces/ once per infrastructure with its own state.
+site = "zrh"
+platform = "openshift"
+management_mode = "cloud"
+kubeconfig_path = "REPLACE_WITH_PRIVATE_KUBECONFIG"
+kube_context = "fzag-zrh-runtime"
+approved_for_cluster_changes = false
