@@ -49,7 +49,7 @@ data "azurerm_client_config" "current" {}
 # AzAPI addresses the existing RG by its exact ARM ID; it does not rename it.
 resource "azapi_resource" "demo" {
   type      = "Microsoft.ContainerService/managedClusters@2025-04-01"
-  name      = "aks-fzag-gitops"
+  name      = "aks-fzag-runtime"
   location  = "switzerlandnorth"
   parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/flughafen-zürich-poc"
   identity {
@@ -58,9 +58,9 @@ resource "azapi_resource" "demo" {
   body = {
     sku = { name = "Base", tier = "Free" }
     properties = {
-      dnsPrefix            = "fzag-gitops"
+      dnsPrefix            = "fzag-runtime"
       kubernetesVersion    = var.kubernetes_version
-      nodeResourceGroup    = "rg-fzag-aks-gitops-nodes"
+      nodeResourceGroup    = "rg-fzag-runtime-nodes"
       enableRBAC           = true
       disableLocalAccounts = true
       aadProfile = {
@@ -84,6 +84,7 @@ resource "azapi_resource" "demo" {
       networkProfile = {
         networkPlugin       = "azure"
         networkPluginMode   = "overlay"
+        networkDataplane    = "cilium"
         podCidr             = "10.244.0.0/16"
         serviceCidr         = "10.240.0.0/16"
         dnsServiceIP        = "10.240.0.10"
@@ -93,7 +94,7 @@ resource "azapi_resource" "demo" {
       }
     }
   }
-  tags = { purpose = "fzag-gitops-poc", managedBy = "Terraform" }
+  tags = { purpose = "fzag-runtime-poc", managedBy = "Terraform" }
   lifecycle {
     prevent_destroy = true
     precondition {

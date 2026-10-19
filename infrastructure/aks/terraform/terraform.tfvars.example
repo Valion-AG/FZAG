@@ -1,0 +1,4 @@
+# Copy to a private local inputs file; refresh the exact patch before deployment.
+admin_object_id = "REPLACE_WITH_YOUR_ENTRA_OBJECT_ID"
+kubernetes_version = "1.36.4"
+approved_for_billable_creation = false

@@ -1,0 +1,5 @@
+# These are inputs for an already created Azure runtime cluster.
+kubeconfig_path = "C:/REPLACE/private-aks-kubeconfig"
+kube_context = "fzag-azure-runtime"
+site = "azure"
+approved_for_cluster_changes = false
