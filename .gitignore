@@ -1,0 +1,7 @@
+*.key
+*.pem
+*kubeconfig*
+*registration*.yaml
+*pull-secret*
+.env
+secrets/

@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fzag-dev
+  namespace: argocd
+spec:
+  project: fzag-demo
+  source:
+    repoURL: 'https://github.com/Valion-AG/FZAG'
+    targetRevision: main
+    path: environments/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo-dev
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+      allowEmpty: false

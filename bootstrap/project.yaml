@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fzag-demo
+  namespace: argocd
+spec:
+  sourceRepos:
+    - 'https://github.com/Valion-AG/FZAG'
+  destinations:
+    - {server: 'https://kubernetes.default.svc', namespace: demo-dev}
+    - {server: 'https://kubernetes.default.svc', namespace: demo-int}
+    - {server: 'https://kubernetes.default.svc', namespace: demo-prod}
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - {group: '', kind: ConfigMap}

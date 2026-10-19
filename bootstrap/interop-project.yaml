@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fzag-brokers
+  namespace: argocd
+spec:
+  sourceRepos: ['https://github.com/Valion-AG/FZAG']
+  destinations:
+    - {server: 'https://kubernetes.default.svc', namespace: interop}
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - {group: '', kind: Service}
+    - {group: apps, kind: Deployment}
+    - {group: apps, kind: StatefulSet}

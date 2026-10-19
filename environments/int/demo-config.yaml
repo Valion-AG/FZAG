@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-settings
+  namespace: demo-int
+data:
+  environment: INT
+  release: v1
+  mqttTopic: flughafen/zrh/flights/+/status

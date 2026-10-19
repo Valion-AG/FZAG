@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fzag-brokers
+  namespace: argocd
+spec:
+  project: fzag-brokers
+  source:
+    repoURL: https://github.com/Valion-AG/FZAG
+    targetRevision: main
+    path: workloads/interop
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: interop
+  # First adoption requires an explicit reviewed sync. Enable selfHeal only
+  # after the rendered/live comparison and protocol regression tests pass.
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true

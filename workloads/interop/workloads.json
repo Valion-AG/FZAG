@@ -1,0 +1,718 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "kafka",
+        "namespace": "interop",
+        "labels": {
+          "app.kubernetes.io/managed-by": "Helm"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "internal",
+            "port": 9092,
+            "protocol": "TCP",
+            "targetPort": 9092
+          },
+          {
+            "name": "external",
+            "port": 9093,
+            "protocol": "TCP",
+            "targetPort": 9093
+          }
+        ],
+        "selector": {
+          "app": "kafka"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "name": "kafka",
+        "namespace": "interop",
+        "labels": {
+          "app.kubernetes.io/managed-by": "Helm"
+        }
+      },
+      "spec": {
+        "persistentVolumeClaimRetentionPolicy": {
+          "whenDeleted": "Retain",
+          "whenScaled": "Retain"
+        },
+        "podManagementPolicy": "OrderedReady",
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "kafka"
+          }
+        },
+        "serviceName": "kafka",
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "kafka"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "args": [
+                  "/opt/kafka/bin/kafka-storage.sh format --ignore-formatted --cluster-id \"$(cat /etc/kafka-poc/cluster-id)\" --config /etc/kafka-poc/server.properties\nexec /opt/kafka/bin/kafka-server-start.sh /etc/kafka-poc/server.properties\n"
+                ],
+                "command": [
+                  "/bin/bash",
+                  "-ec"
+                ],
+                "env": [
+                  {
+                    "name": "KAFKA_HEAP_OPTS",
+                    "value": "-Xms256m -Xmx512m"
+                  },
+                  {
+                    "name": "KAFKA_LOG4J_OPTS",
+                    "value": "-Dlog4j2.configurationFile=/opt/kafka/config/log4j2.yaml"
+                  }
+                ],
+                "image": "fzaginterop261019.azurecr.io/kafka@sha256:77e3df9054047a88b520d0cc46e16696d3b22022e1d580aeccd2632df6532837",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "failureThreshold": 6,
+                  "periodSeconds": 20,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "internal"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "name": "kafka",
+                "ports": [
+                  {
+                    "containerPort": 9092,
+                    "name": "internal",
+                    "protocol": "TCP"
+                  },
+                  {
+                    "containerPort": 9093,
+                    "hostPort": 9093,
+                    "name": "external",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "internal"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "1280Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "768Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "startupProbe": {
+                  "failureThreshold": 60,
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "internal"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/data",
+                    "name": "data"
+                  },
+                  {
+                    "mountPath": "/etc/kafka-poc",
+                    "name": "config",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "imagePullSecrets": [
+              {
+                "name": "acr-pull"
+              }
+            ],
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {
+              "fsGroup": 1000,
+              "runAsGroup": 1000,
+              "runAsUser": 1000
+            },
+            "terminationGracePeriodSeconds": 30,
+            "volumes": [
+              {
+                "name": "data",
+                "persistentVolumeClaim": {
+                  "claimName": "kafka-data"
+                }
+              },
+              {
+                "name": "config",
+                "secret": {
+                  "defaultMode": 288,
+                  "secretName": "kafka-config"
+                }
+              }
+            ]
+          }
+        },
+        "updateStrategy": {
+          "rollingUpdate": {
+            "partition": 0
+          },
+          "type": "RollingUpdate"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "mqtt",
+        "namespace": "interop",
+        "labels": {
+          "app.kubernetes.io/managed-by": "Helm"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "tls",
+            "port": 8883,
+            "protocol": "TCP",
+            "targetPort": 8883
+          }
+        ],
+        "selector": {
+          "app": "mqtt"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "mqtt",
+        "namespace": "interop",
+        "labels": {
+          "app.kubernetes.io/managed-by": "Helm"
+        }
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "mqtt"
+          }
+        },
+        "strategy": {
+          "type": "Recreate"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "mqtt"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "command": [
+                  "/usr/sbin/mosquitto",
+                  "-c",
+                  "/etc/mqtt-poc/mosquitto.conf"
+                ],
+                "image": "fzaginterop261019.azurecr.io/mosquitto@sha256:199ea8ef2e35ec2b1b37e59cfd1dbae538ed4dfa4a2251a121a52215a6248a21",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "failureThreshold": 3,
+                  "periodSeconds": 20,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "tls"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "name": "mqtt",
+                "ports": [
+                  {
+                    "containerPort": 8883,
+                    "hostPort": 8883,
+                    "name": "tls",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "tls"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "200m",
+                    "memory": "128Mi"
+                  },
+                  "requests": {
+                    "cpu": "10m",
+                    "memory": "32Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/mosquitto/data",
+                    "name": "data"
+                  },
+                  {
+                    "mountPath": "/etc/mqtt-poc",
+                    "name": "config",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "imagePullSecrets": [
+              {
+                "name": "acr-pull"
+              }
+            ],
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {
+              "fsGroup": 1883,
+              "runAsGroup": 1883,
+              "runAsUser": 1883
+            },
+            "terminationGracePeriodSeconds": 30,
+            "volumes": [
+              {
+                "name": "data",
+                "persistentVolumeClaim": {
+                  "claimName": "mqtt-data"
+                }
+              },
+              {
+                "name": "config",
+                "secret": {
+                  "defaultMode": 288,
+                  "secretName": "mqtt-config"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "kafka41",
+        "namespace": "interop",
+        "labels": {
+          "app.kubernetes.io/managed-by": "Helm"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "kafka-tls",
+            "port": 9092,
+            "protocol": "TCP",
+            "targetPort": 9092
+          },
+          {
+            "name": "external",
+            "port": 19093,
+            "protocol": "TCP",
+            "targetPort": 19093
+          }
+        ],
+        "selector": {
+          "app": "kafka41"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "name": "kafka41",
+        "namespace": "interop",
+        "labels": {
+          "app.kubernetes.io/managed-by": "Helm"
+        }
+      },
+      "spec": {
+        "persistentVolumeClaimRetentionPolicy": {
+          "whenDeleted": "Retain",
+          "whenScaled": "Retain"
+        },
+        "podManagementPolicy": "OrderedReady",
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "kafka41"
+          }
+        },
+        "serviceName": "kafka41",
+        "template": {
+          "metadata": {
+            "annotations": {
+              "kubectl.kubernetes.io/restartedAt": "2026-10-19T08:24:54Z"
+            },
+            "labels": {
+              "app": "kafka41"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "args": [
+                  "/opt/kafka/bin/kafka-storage.sh format --ignore-formatted --cluster-id \"$(cat /etc/kafka-poc/cluster-id)\" --config /etc/kafka-poc/server.properties\nexec /opt/kafka/bin/kafka-server-start.sh /etc/kafka-poc/server.properties\n"
+                ],
+                "command": [
+                  "/bin/bash",
+                  "-ec"
+                ],
+                "env": [
+                  {
+                    "name": "KAFKA_HEAP_OPTS",
+                    "value": "-Xms128m -Xmx384m"
+                  }
+                ],
+                "image": "docker.io/apache/kafka@sha256:5cc2a2fd93fa2687b44015eee04fb2c3edd9e526bd64bf8bec5ff1e268772e0e",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "failureThreshold": 6,
+                  "periodSeconds": 20,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "kafka-tls"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "name": "kafka",
+                "ports": [
+                  {
+                    "containerPort": 9092,
+                    "name": "kafka-tls",
+                    "protocol": "TCP"
+                  },
+                  {
+                    "containerPort": 19093,
+                    "hostPort": 19093,
+                    "name": "external",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "kafka-tls"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "1Gi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "512Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "startupProbe": {
+                  "failureThreshold": 60,
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "kafka-tls"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/data",
+                    "name": "data"
+                  },
+                  {
+                    "mountPath": "/etc/kafka-poc",
+                    "name": "config",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {
+              "fsGroup": 1000,
+              "runAsGroup": 1000,
+              "runAsUser": 1000
+            },
+            "terminationGracePeriodSeconds": 30,
+            "volumes": [
+              {
+                "name": "data",
+                "persistentVolumeClaim": {
+                  "claimName": "kafka41-data"
+                }
+              },
+              {
+                "name": "config",
+                "secret": {
+                  "defaultMode": 288,
+                  "secretName": "kafka41-config"
+                }
+              }
+            ]
+          }
+        },
+        "updateStrategy": {
+          "rollingUpdate": {
+            "partition": 0
+          },
+          "type": "RollingUpdate"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "schema-registry",
+        "namespace": "interop",
+        "labels": {
+          "app.kubernetes.io/managed-by": "Helm"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "https",
+            "port": 8081,
+            "protocol": "TCP",
+            "targetPort": 8081
+          }
+        ],
+        "selector": {
+          "app": "schema-registry"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "schema-registry",
+        "namespace": "interop",
+        "labels": {
+          "app.kubernetes.io/managed-by": "Helm"
+        }
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "app": "schema-registry"
+          }
+        },
+        "strategy": {
+          "type": "Recreate"
+        },
+        "template": {
+          "metadata": {
+            "annotations": {
+              "kubectl.kubernetes.io/restartedAt": "2026-10-19T08:25:11Z"
+            },
+            "labels": {
+              "app": "schema-registry"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "command": [
+                  "/usr/bin/schema-registry-start",
+                  "/etc/registry-poc/schema-registry.properties"
+                ],
+                "env": [
+                  {
+                    "name": "SCHEMA_REGISTRY_HEAP_OPTS",
+                    "value": "-Xms128m -Xmx384m"
+                  },
+                  {
+                    "name": "SCHEMA_REGISTRY_OPTS",
+                    "value": "-Djava.security.auth.login.config=/etc/registry-poc/jaas.conf"
+                  }
+                ],
+                "image": "docker.io/confluentinc/cp-schema-registry@sha256:22caff22e2aef635c4d919046a195458fbcad367aae801ca8867f9d9a6f5bade",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "failureThreshold": 6,
+                  "periodSeconds": 20,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "https"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "name": "registry",
+                "ports": [
+                  {
+                    "containerPort": 8081,
+                    "hostPort": 8081,
+                    "name": "https",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "https"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "768Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "384Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "startupProbe": {
+                  "failureThreshold": 60,
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "tcpSocket": {
+                    "port": "https"
+                  },
+                  "timeoutSeconds": 1
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/etc/registry-poc",
+                    "name": "config",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {
+              "fsGroup": 1000,
+              "runAsGroup": 1000,
+              "runAsUser": 1000
+            },
+            "terminationGracePeriodSeconds": 30,
+            "volumes": [
+              {
+                "name": "config",
+                "secret": {
+                  "defaultMode": 288,
+                  "secretName": "schema-registry-config"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
