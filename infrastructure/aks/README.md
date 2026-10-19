@@ -1,5 +1,7 @@
 # Kubernetes foundation for the supplied FZAG architecture
 
+**Updated: common foundation for Azure, ZRH and MCDP. Start with [Three-Sites-Quickstart.md](Three-Sites-Quickstart.md). On-prem hosting remains undecided; no infrastructure or MuleSoft components have been deployed.**
+
 **Prepared in Terraform, not deployed.** This revision follows your supplied architecture diagram: start with the Kubernetes runtime foundation; connect the MuleSoft control planes later.
 
 ## What the code creates
@@ -7,7 +9,10 @@
 | Terraform root | Purpose |
 |---|---|
 | `terraform/` | One Azure AKS runtime cluster, `aks-fzag-runtime`, in Switzerland North and existing resource group `flughafen-zürich-poc` |
-| `runtime-namespaces/` | DEV / INT / PROD namespaces and initial network isolation on an explicitly selected existing Kubernetes cluster |
+| `runtime-namespaces/` | Single-site entry point for the common foundation, including platform-specific DNS |
+| `modules/runtime-foundation/` | Same reusable namespaces/network-policy code for AKS, OpenShift and generic Kubernetes |
+| `all-sites/` | Three-distinct-cluster connected lab orchestration; not for true airgap |
+| `profiles/` | Azure, ZRH and MCDP example inputs, each executed with separate site state |
 
 The Azure cluster uses two F4s v2 nodes, AKS Free management tier, Entra/Azure RBAC, source-restricted administration, Azure CNI Overlay with Cilium, managed OS disks and normal upgrade surge. It is a PoC foundation, not a production-HA claim.
 
@@ -32,7 +37,7 @@ The diagram's MCDP isolation also needs clarification before network implementat
 
 ## Deploy in two phases, after approval
 
-Use Terraform 1.16.6 for the tested local workflow. Choose a currently available exact AKS patch after checking the future gateway compatibility; the example patch is illustrative, not a support claim.
+Use Terraform 1.16.6 for the tested local workflow (single-site root requires at least 1.9). Choose a currently available exact AKS patch after checking the future gateway compatibility; the example patch is illustrative, not a support claim.
 
 **Phase 1 — Azure cluster**
 
@@ -62,7 +67,7 @@ Use the actual absolute kubeconfig path in Phase 2. Azure RBAC assignment propag
 
 Policies permit same-namespace pod traffic and DNS to standard Kubernetes CoreDNS in `kube-system` (`k8s-app=kube-dns`), while other pod ingress/egress is denied by default on an enforcing CNI. Gateway ingress, backend egress and future SaaS management endpoints must be explicitly added when their addresses/ports are known. DNS upstreams are not restricted by these pod policies; host traffic and cluster administrators are outside this boundary.
 
-On future OpenShift targets, adapt the DNS policy to the actual OpenShift DNS namespace, labels and service ports before use; the supplied policy defaults are for AKS. Validate enforcement with real test pods before claiming isolation. Terraform mock tests verify configuration shape, not live network behaviour.
+The shared module now includes an OpenShift DNS preset (openshift-dns / daemonset-dns=default / port 5353); choose platform=openshift and verify the actual namespace, labels and ports. The DNS override supports alternative distributions. Validate enforcement with real test pods before claiming isolation. Terraform mock tests verify configuration shape, not live network behaviour.
 
 ## Cost and approval
 
@@ -80,6 +85,6 @@ Code is in draft PR #4 of Valion-AG/FZAG. Nothing auto-applies it. Infrastructur
 
 The AzureRM 4.59 resource-group validator rejects the umlaut in the existing group name. AKS is therefore created through the official Azure AzAPI provider using the group's exact ARM ID; AzureRM handles identity lookup and scoped role assignment. Existing group name is preserved. API version 2025-04-01 was confirmed in the Azure provider listing.
 
-Local validation uses Terraform init/validate and **mock-provider plan tests**, without Azure resources or Kubernetes calls. Provider lock files include Linux and Windows hashes. `validate.sh` can run the same checks locally or in a future CI workflow; no GitHub Actions workflow or automatic deployment has been activated.
+Local validation uses Terraform init/validate and **mock-provider plan tests**, without Azure resources or Kubernetes calls. Provider lock files include Linux and Windows hashes. Validation covers the Azure root, single-site root and connected-lab root; the common module is exercised through the latter two. `validate.sh` can run the same checks locally or in a future CI workflow; no GitHub Actions workflow or automatic deployment has been activated.
 
 Remaining post-deployment tests: real Azure plan/apply, nodes Ready, Entra login, DNS, network-policy enforcement, stop/start recovery, and later actual gateway installation/connectivity. The code does not claim those tests have already passed.
