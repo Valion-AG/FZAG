@@ -8,25 +8,59 @@ The infrastructure proposal was merged in [PR #4](https://github.com/Valion-AG/F
 
 ## How to use it
 
-1. **Check out the proposal:**
+Start with **Azure only**. ZRH and MCDP come later, once their infrastructure is known.
 
-   ```sh
-   git clone https://github.com/Valion-AG/FZAG.git
-   cd FZAG
-   git switch main
-   ```
+### Try it now: download and check the code
 
-   Open `infrastructure/aks/` for the infrastructure code and this guide.
+With Git and Terraform installed, open PowerShell:
 
-2. **Choose the target:** Azure, ZRH or MCDP. Each target needs its own supported cluster and configuration. DEV / INT / PROD are stages; they do not automatically mean three clusters per target. ZRH/MCDP hosting is still undecided.
+```powershell
+git clone https://github.com/Valion-AG/FZAG.git
+cd FZAG/infrastructure/aks
+terraform -chdir=terraform init -backend=false
+terraform -chdir=terraform validate
+```
 
-3. **Prepare the cluster:** use the optional `terraform/` AKS infrastructure root for Azure after checking supported Kubernetes versions, permissions, quota and costs and obtaining spending approval. On-premises provisioning depends on the chosen infrastructure. Do not create a cluster using the illustrative version without checking RTF support.
+Already cloned it? Use your existing checkout instead of cloning again.
 
-4. **Prepare GitOps and MuleSoft access:** establish the appropriate Argo CD controller and repository/cluster access. Obtain RTF entitlement, activation data, environment IDs and the exact vendor chart version. MCDP needs a verified disconnected/private-control-plane design with internal Git and registry. Agree the bootstrap boundary for the demonstration.
+**Expected:** `The configuration is valid.` You now have the files and have checked their syntax. These commands download Terraform providers but create no Azure resources. They do not check Azure permissions, quota or MuleSoft compatibility.
 
-5. **Prepare and review the runtime PR:** add the Argo CD Application for the pinned vendor chart, stage namespaces and required authorizations. Validate secret delivery without placing credentials or licenses in Git. **These deployment artifacts are not ready to execute yet.**
+### Later: create the Azure cluster
 
-6. **Merge and verify:** Argo CD detects the Git change and installs the runtime. Check Argo sync/health and Anypoint runtime registration. Demonstrate a configuration change, drift correction and supported rollback through Git.
+AKS provides the computers that run Runtime Fabric. Terraform creates this infrastructure.
+
+For our example: use **Switzerland North**, resource group **flughafen-zürich-poc**, and one Azure runtime cluster with DEV / INT / PROD application stages.
+
+Before creation, check costs, quota, permissions and the RTF-supported Kubernetes version. The example version in the code is not confirmed for RTF. **Creation still needs cost approval**, so there is no deployment command to run at this stage.
+
+### Later: install Runtime Fabric through Git
+
+We first need MuleSoft access, activation data, a supported chart version and the missing Argo CD deployment configuration. Keep licenses and passwords outside Git.
+
+Once those are ready, your workflow is:
+
+1. Open a GitHub pull request: for example, “Install Runtime Fabric in Azure.”
+2. Review and merge it.
+3. Open Argo CD and wait for **Synced** and **Healthy**.
+4. Open Anypoint Runtime Manager and check that the fabric is registered and connected.
+
+**The RTF Argo CD Application is not ready to execute yet.** Argo CD also needs repository and target-cluster access. These are the intended steps once that integration is completed.
+
+### Examples of everyday changes
+
+| What you want | What you do once GitOps is ready |
+|---|---|
+| Install RTF in Azure | Merge the reviewed Azure runtime configuration; Argo CD installs it |
+| Upgrade RTF | Change the pinned chart version to a supported release in Git; review and merge |
+| Undo an update | Revert the Git change, following vendor rollback and backup requirements |
+| Add ZRH | Prepare its supported cluster and separate site configuration, then deploy through Argo CD |
+| Add isolated MCDP | Confirm offline support first; use internal Git, registry and Argo CD inside MCDP |
+
+For example, an upgrade PR changes the chart version from the current approved release to the next approved release. After merging, watch Argo CD perform the update. You do not run `helm install` yourself.
+
+**Today you can download and validate the code.** Actual cluster creation needs approval; RTF installation needs MuleSoft access and the remaining GitOps integration.
+
+
 
 ## Which tool does what?
 
