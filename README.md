@@ -23,3 +23,7 @@ Changes to adopted workload/service specifications go through Git and Argo CD. D
 Only Service, Deployment and StatefulSet are allowed in the broker Argo project; Secrets, PVCs, PersistentVolumes and Azure resources are excluded. A rebuild therefore also needs the existing separately secured bootstrap, storage and secret provisioning. This is not a complete disaster-recovery or air-gap implementation.
 
 The PR promotion demo changes only release metadata in ConfigMaps. It uses one operator to create and merge PRs; independent review and branch protection are not claimed. Current applications track main, with selfHeal enabled and prune disabled.
+
+## Runtime Fabric quickstart
+
+Start with [the Runtime Fabric quickstart](infrastructure/aks/README.md) for the Terraform infrastructure and Argo CD workflow. Runtime Fabric is not deployed; MuleSoft access and deployment integration remain pending.
