@@ -1,0 +1,74 @@
+{{- if not (has .Values.site (list "azure" "zrh" "mcdp")) }}{{ fail "Invalid site" }}{{ end }}
+{{- if .Values.rtfEnabled }}
+{{- $_ := required "organizationId is required" .Values.organizationId }}
+{{- $_ := required "registryDockerConfig is required" .Values.registryDockerConfig }}
+{{- end }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rtf
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+    argocd.argoproj.io/sync-options: Prune=false
+{{- range $stage := list "dev" "int" "prod" }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fzag-{{ $.Values.site }}-{{ $stage }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+    argocd.argoproj.io/sync-options: Prune=false
+  labels:
+    fzag.site: {{ $.Values.site | quote }}
+    fzag.stage: {{ $stage | quote }}
+    {{- if $.Values.rtfEnabled }}
+    rtf.mulesoft.com/agentNamespace: rtf
+    rtf.mulesoft.com/envId: {{ required (printf "%s environmentId is required" $stage) (index $.Values.stages $stage).environmentId | quote }}
+    rtf.mulesoft.com/org: {{ $.Values.organizationId | quote }}
+    rtf.mulesoft.com/role: workers
+    {{- end }}
+{{- end }}
+{{- if .Values.rtfEnabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authorized-namespaces
+  namespace: rtf
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+data:
+  DEV: fzag-{{ .Values.site }}-dev
+  INT: fzag-{{ .Values.site }}-int
+  PROD: fzag-{{ .Values.site }}-prod
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rtf-pull-secret
+  namespace: rtf
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: {{ .Values.registryDockerConfig | b64enc | quote }}
+{{- range $stage := list "dev" "int" "prod" }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rtf-agent
+  namespace: fzag-{{ $.Values.site }}-{{ $stage }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rtf:agent
+subjects:
+  - kind: ServiceAccount
+    name: rtf-agent
+    namespace: rtf
+{{- end }}
+{{- end }}

@@ -1,0 +1,6 @@
+site: mcdp
+organizationId: ""
+stages:
+  dev: {environmentId: ""}
+  int: {environmentId: ""}
+  prod: {environmentId: ""}

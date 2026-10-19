@@ -1,3 +1,5 @@
+> Superseded entry point: use the [reusable cluster installer](../cluster-install/README.md). The text below describes the earlier proposal and is retained for context; its pending-artifact statements predate the new installer. The new bundle still requires live cluster and real vendor-chart validation.
+
 # Runtime Fabric: GitOps quickstart
 
 

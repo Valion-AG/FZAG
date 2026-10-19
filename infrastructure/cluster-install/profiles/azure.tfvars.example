@@ -1,0 +1,12 @@
+site = "azure"
+kubeconfig_path = "C:/PRIVATE/azure/kubeconfig"
+kube_context = "REPLACE_WITH_EXACT_CONTEXT"
+approved_for_cluster_changes = false
+install_rtf = false
+vendor_support_confirmed = false
+mcdp_offline_support_confirmed = false
+# private_inputs_directory = "C:/PRIVATE/azure/rtf-inputs"
+# For a private Git mirror, set repository_url and git_credentials_available;
+# supply git-username and git-password files in private_inputs_directory.
+# MCDP also needs mirrored Argo chart/images via argocd_* variables and an
+# argocd_extra_values_file for Redis/other image references and platform settings.

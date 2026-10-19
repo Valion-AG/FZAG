@@ -26,4 +26,8 @@ The PR promotion demo changes only release metadata in ConfigMaps. It uses one o
 
 ## Runtime Fabric quickstart
 
-Start with [the Runtime Fabric quickstart](infrastructure/aks/README.md) for the Terraform infrastructure and Argo CD workflow. Runtime Fabric is not deployed; MuleSoft access and deployment integration remain pending.
+Start with [the Runtime Fabric quickstart](infrastructure/cluster-install/README.md) for the Terraform infrastructure and Argo CD workflow. Runtime Fabric is not deployed; MuleSoft access and deployment integration remain pending.
+
+## Reusable cluster installer
+
+[Install onto a new Kubernetes cluster](infrastructure/cluster-install/README.md): bootstrap Argo CD and DEV/INT/PROD namespaces, then optionally deploy the official RTF chart with private vendor inputs. The bundle has local/render checks, but no live cluster or real vendor-chart validation. It does not install an Anypoint management plane.

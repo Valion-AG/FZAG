@@ -1,0 +1,6 @@
+site: azure
+organizationId: ""
+stages:
+  dev: {environmentId: ""}
+  int: {environmentId: ""}
+  prod: {environmentId: ""}

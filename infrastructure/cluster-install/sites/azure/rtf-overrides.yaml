@@ -1,0 +1,6 @@
+# Reviewed nonsecret overrides to the vendor-generated values file.
+# Check these keys against the selected vendor chart before installation.
+global:
+  authorizedNamespaces: true
+  image:
+    pullSecretName: rtf-pull-secret

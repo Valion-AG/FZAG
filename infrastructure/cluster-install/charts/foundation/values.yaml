@@ -1,0 +1,8 @@
+site: azure
+rtfEnabled: false
+organizationId: ""
+registryDockerConfig: ""
+stages:
+  dev: {environmentId: ""}
+  int: {environmentId: ""}
+  prod: {environmentId: ""}

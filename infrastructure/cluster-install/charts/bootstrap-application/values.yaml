@@ -1,0 +1,4 @@
+site: azure
+repository: https://github.com/Valion-AG/FZAG.git
+revision: main
+path: infrastructure/cluster-install

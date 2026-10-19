@@ -1,0 +1,6 @@
+site: zrh
+organizationId: ""
+stages:
+  dev: {environmentId: ""}
+  int: {environmentId: ""}
+  prod: {environmentId: ""}
