@@ -37,14 +37,56 @@ Before creation, check costs, quota, permissions and the RTF-supported Kubernete
 
 We first need MuleSoft access, activation data, a supported chart version and the missing Argo CD deployment configuration. Keep licenses and passwords outside Git.
 
-Once those are ready, your workflow is:
+### How to create the pull request
 
-1. Open a GitHub pull request: for example, “Install Runtime Fabric in Azure.”
-2. Review and merge it.
-3. Open Argo CD and wait for **Synced** and **Healthy**.
-4. Open Anypoint Runtime Manager and check that the fabric is registered and connected.
+GitHub calls a merge request a **pull request (PR)**. Once the deployment files are ready:
 
-**The RTF Argo CD Application is not ready to execute yet.** Argo CD also needs repository and target-cluster access. These are the intended steps once that integration is completed.
+1. Open [FZAG on GitHub](https://github.com/Valion-AG/FZAG).
+2. From the branch selector, create a branch from `main`, for example `deploy/azure-runtime`.
+3. Open the deployment file you want to change, click the pencil icon, edit it and choose **Commit changes** to your new branch.
+4. Open **Pull requests -> New pull request**. Select `main` as the **base** and `deploy/azure-runtime` as the **compare** branch.
+5. Review the changed files, then click **Create pull request**. Example title: "Install Runtime Fabric in Azure".
+6. After review, click **Merge pull request**. If repository rules require checks or another reviewer, complete those first.
+
+The PR changes configuration; it does not select a deployment target by itself. Editing this README only changes documentation.
+
+### Where do I tell it to deploy?
+
+An **Argo CD Application** connects configuration in Git to a Kubernetes cluster. The following is an illustrative Application `spec` excerpt, **not a ready-to-use deployment file**:
+
+```yaml
+spec:
+  source:
+    repoURL: https://github.com/Valion-AG/FZAG.git
+    targetRevision: main
+    path: deployments/azure/runtime-fabric
+  destination:
+    server: https://YOUR-AKS-API-ENDPOINT
+    namespace: rtf
+```
+
+| Setting | What you enter |
+|---|---|
+| `targetRevision` | The branch Argo CD watches, here `main` |
+| `path` | The Git folder containing the deployment configuration |
+| `destination.server` | The API endpoint of the intended cluster, already registered with Argo CD |
+| `destination.namespace` | The default namespace for namespaced resources, here `rtf` |
+
+The example folder and endpoint are placeholders. The completed Application needs additional settings, the real vendor chart integration and protected secret delivery. The cluster must exist, and Argo CD must have access and an AppProject permitting the source and destination. The `rtf` namespace hosts runtime components; DEV/INT/PROD application namespaces and authorizations are configured separately. A namespace explicitly set in a manifest takes precedence over the Application's default.
+
+For example, Azure and ZRH would have separate Applications pointing to their respective clusters and site configuration. Isolated MCDP uses its internal Git, registry and controller. You do not choose the region in the pull request form: Terraform configures the Azure infrastructure region; the Application points to the resulting cluster.
+
+### What happens after merging?
+
+With automatic synchronization and self-healing configured:
+
+**Merge into main -> Argo CD detects the change -> deploys to the configured cluster -> check Synced / Healthy.**
+
+Without automatic synchronization, merge first and then click **Sync** in Argo CD. Neither option involves a manual `kubectl apply` or `helm install`.
+
+Open the Application in Argo CD to check its **Destination**, **Sync status**, **Health** and deployed resources. Then check in Anypoint Runtime Manager that the fabric is registered and connected. Argo health alone does not prove Anypoint registration or working application traffic.
+
+**Current limit:** the RTF Application, target-cluster connection and protected MuleSoft credentials are still pending. A README merge does not deploy RTF, and this example cannot deploy anything yet.
 
 ### Examples of everyday changes
 
