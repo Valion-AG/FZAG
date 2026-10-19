@@ -1,0 +1,8 @@
+# Phase A: namespace preparation only; no activation data or license required.
+# OpenShift/generic platform support for actual RTF must be confirmed separately.
+site = "azure"
+platform = "aks"
+kubeconfig_path = "REPLACE_WITH_ABSOLUTE_PRIVATE_KUBECONFIG_PATH"
+kube_context = "fzag-azure-runtime"
+approved_for_cluster_changes = false
+install_runtime_fabric = false

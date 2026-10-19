@@ -1,0 +1,3 @@
+# Mock-only fixture; not valid activation data or a Mule license.
+activationData: mock-not-an-activation-token
+muleLicense: mock-not-a-license

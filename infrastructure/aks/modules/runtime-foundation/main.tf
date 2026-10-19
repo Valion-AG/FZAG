@@ -41,6 +41,18 @@ variable "dns_override" {
   type        = object({ namespace = string, pod_labels = map(string), ports = set(number) })
   default     = null
 }
+variable "stage_labels" {
+  type    = map(map(string))
+  default = {}
+}
+variable "prepare_management_namespace" {
+  type    = bool
+  default = true
+}
+variable "create_network_policies" {
+  type    = bool
+  default = true
+}
 locals {
   stages = toset(["dev", "int", "prod"])
   dns_defaults = var.platform == "openshift" ? {
@@ -58,11 +70,11 @@ resource "kubernetes_namespace_v1" "stage" {
   for_each = local.stages
   metadata {
     name = "fzag-${var.site}-${each.key}"
-    labels = {
+    labels = merge({
       "app.kubernetes.io/part-of" = "fzag-runtime"
       "fzag.ch/site"              = var.site
       "fzag.ch/stage"             = each.key
-    }
+    }, lookup(var.stage_labels, each.key, {}))
   }
   lifecycle {
     prevent_destroy = true
@@ -77,7 +89,7 @@ resource "kubernetes_namespace_v1" "stage" {
   }
 }
 resource "kubernetes_namespace_v1" "management" {
-  count = var.management_mode == "local" ? 1 : 0
+  count = var.management_mode == "local" && var.prepare_management_namespace ? 1 : 0
   metadata {
     name = "fzag-${var.site}-management"
     labels = {
@@ -97,11 +109,11 @@ resource "kubernetes_namespace_v1" "management" {
 locals {
   namespace_names = merge(
     { for stage, ns in kubernetes_namespace_v1.stage : stage => ns.metadata[0].name },
-    var.management_mode == "local" ? { management = kubernetes_namespace_v1.management[0].metadata[0].name } : {}
+    var.management_mode == "local" && var.prepare_management_namespace ? { management = kubernetes_namespace_v1.management[0].metadata[0].name } : {}
   )
 }
 resource "kubernetes_network_policy_v1" "boundary" {
-  for_each = local.namespace_names
+  for_each = var.create_network_policies ? local.namespace_names : {}
   metadata {
     name      = "stage-boundary"
     namespace = each.value
@@ -140,6 +152,6 @@ output "stage_namespaces" {
   value = { for stage, ns in kubernetes_namespace_v1.stage : stage => ns.metadata[0].name }
 }
 output "management_namespace" {
-  value = var.management_mode == "local" ? kubernetes_namespace_v1.management[0].metadata[0].name : null
+  value = var.management_mode == "local" && var.prepare_management_namespace ? kubernetes_namespace_v1.management[0].metadata[0].name : null
 }
 output "dns_profile" { value = local.dns }

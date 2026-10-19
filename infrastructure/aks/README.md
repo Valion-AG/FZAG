@@ -1,90 +1,24 @@
-# Kubernetes foundation for the supplied FZAG architecture
+# Runtime Fabric Terraform
 
-**Updated: common foundation for Azure, ZRH and MCDP. Start with [Three-Sites-Quickstart.md](Three-Sites-Quickstart.md). On-prem hosting remains undecided; no infrastructure or MuleSoft components have been deployed.**
+**Current entry point: [Apply-Runtime-Fabric.md](Apply-Runtime-Fabric.md).** This bundle is now focused on preparing/installing Runtime Fabric, not Omni Gateway, Crossplane, Anypoint SaaS provisioning or Private Cloud Edition.
 
-**Prepared in Terraform, not deployed.** This revision follows your supplied architecture diagram: start with the Kubernetes runtime foundation; connect the MuleSoft control planes later.
-
-## What the code creates
-
-| Terraform root | Purpose |
+| Path | Use |
 |---|---|
-| `terraform/` | One Azure AKS runtime cluster, `aks-fzag-runtime`, in Switzerland North and existing resource group `flughafen-zürich-poc` |
-| `runtime-namespaces/` | Single-site entry point for the common foundation, including platform-specific DNS |
-| `modules/runtime-foundation/` | Same reusable namespaces/network-policy code for AKS, OpenShift and generic Kubernetes |
-| `all-sites/` | Three-distinct-cluster connected lab orchestration; not for true airgap |
-| `profiles/` | Azure, ZRH and MCDP example inputs, each executed with separate site state |
+| `runtime-fabric/` | Main Terraform root: prepare namespaces now, optionally install the official RTF chart later |
+| `runtime-fabric/profiles/` | Azure, ZRH and MCDP example inputs |
+| `modules/runtime-foundation/` | Shared stage namespace implementation |
+| `terraform/` | Optional Azure AKS cluster provisioning; still needs cost approval and refreshed preflight |
 
-The Azure cluster uses two F4s v2 nodes, AKS Free management tier, Entra/Azure RBAC, source-restricted administration, Azure CNI Overlay with Cilium, managed OS disks and normal upgrade surge. It is a PoC foundation, not a production-HA claim.
+Run the RTF root **once per supported cluster**, with a separate working directory/state and explicit kubeconfig/context for each infrastructure. One fabric can use DEV/INT/PROD authorized application namespaces; the Terraform does not deploy Mule applications.
 
-For `site = "azure"`, the namespace root creates `fzag-azure-dev`, `fzag-azure-int`, `fzag-azure-prod`. It also supports `site = "zrh"` or `"mcdp"` for future application against **separate, already provisioned clusters** with their own contexts and states. Those options do not create on-premises VMs, OpenShift, or a self-hosted MuleSoft control plane. Do not deploy all three sites on the Azure cluster and describe that as the supplied topology.
+Default: `install_runtime_fabric=false`. This prepares `rtf` and the three worker namespaces without credentials or activated MuleSoft software. Set the flag true only after the documented activation, licensing, platform and networking prerequisites are met. There is no Private Cloud control-plane installation in this root.
 
-```text
-Now: Terraform -> AKS runtime foundation -> DEV / INT / PROD namespaces
+ZRH/MCDP cluster hosting remains undecided; their cluster provisioning adapters cannot be completed until that is chosen. The RTF installation path/version must support the actual Kubernetes distribution. Generic/OpenShift namespace compatibility alone is not evidence of RTF product support. MCDP additionally needs approved disconnected RTF/private-control-plane compatibility and local artifact supply.
 
-Later: Anypoint SaaS -> Azure and ZRH gateway deployments
-       Separate MCDP management -> isolated MCDP gateway deployments
-```
+The Azure AKS candidate remains two F4s v2 nodes in Switzerland North and the existing resource group. No Azure resources were created. Previous estimated extra continuous cost USD 350–390/month is not a new approval; exact patch, quota and cost checks must be refreshed before creation. See [on-demand operation](On-Demand-Betrieb.md) for residual costs when stopped.
 
-## Not included yet
+The older `runtime-namespaces/`, `all-sites/`, top-level `profiles/` and Three-Sites guide are retained from the broader foundation proposal. **Do not apply those roots to the same resources as `runtime-fabric/`.** Use the RTF-specific guide and profiles for the narrowed scope. Terraform owns the RTF namespace/authorization/Helm installation here; do not add a competing Argo/Helm owner.
 
-- MuleSoft gateways, Mule Runtime Fabric, Mule applications or Anypoint SaaS organisation/configuration.
-- The on-premises ZRH/MCDP cluster infrastructure or MCDP self-hosted control plane. Those require the actual on-prem platform, capacity, network, authorized access and supported MuleSoft artifacts/licensing.
-- ExpressRoute, enterprise DNS, ingress certificates, gateway listeners, backend access or SaaS WebSocket connections.
-- Argo CD or Crossplane on the new AKS. Existing K3s GitOps stays unchanged. There is no need to install a SaaS management controller merely to create the runtime foundation.
-- Nine independent clusters: DEV/INT/PROD are initially logical namespaces; production physical isolation/HA remains a separate design.
+Validation: Terraform provider validation and four mocked RTF plan tests pass; seven existing shared-foundation regression tests also pass. No private vendor chart was downloaded or tested. No deployment, license activation, live networking or Mule application test has occurred.
 
-The diagram's MCDP isolation also needs clarification before network implementation: it labels MCDP air-gapped while drawing API-traffic arrows toward ZRH. Namespace policies do not establish a network air gap. No MCDP-to-cloud or MCDP-to-ZRH connection is created here.
-
-## Deploy in two phases, after approval
-
-Use Terraform 1.16.6 for the tested local workflow (single-site root requires at least 1.9). Choose a currently available exact AKS patch after checking the future gateway compatibility; the example patch is illustrative, not a support claim.
-
-**Phase 1 — Azure cluster**
-
-1. Review `terraform/terraform.tfvars.example` and prepare local inputs (never commit actual tfvars/state/credentials).
-2. Recheck Azure permissions/policy, provider registration, SKU availability, costs and quotas. Select a protected/locked state backend before real use.
-3. Obtain explicit cost approval, then set `approved_for_billable_creation = true` in the reviewed execution inputs.
-4. Run `terraform init`, `terraform plan -out=reviewed.tfplan`, review only the intended new resources, then `terraform apply reviewed.tfplan`.
-5. Retrieve an explicit local kubeconfig/context using the cluster-user identity and Entra `kubelogin`. Do not export admin kubeconfig or place credentials in Terraform outputs.
-
-**Phase 2 — Runtime namespaces**
-
-1. Use a different state/backend from Phase 1.
-2. Set `kubeconfig_path`, `kube_context`, `site = "azure"`, and `approved_for_cluster_changes = true` after checking the intended cluster.
-3. Run init / plan / reviewed apply from `runtime-namespaces/`.
-4. Verify three namespaces and `stage-boundary` policies. No gateway applications should be expected yet.
-
-Example credential retrieval after AKS is created, from an authorized PC:
-
-```powershell
-az aks get-credentials --subscription 6f5e5d9c-cd3f-4dec-8ade-410c01c8195f --resource-group 'flughafen-zürich-poc' --name aks-fzag-runtime --file ./private-aks-kubeconfig --context fzag-azure-runtime
-kubelogin convert-kubeconfig -l azurecli --kubeconfig ./private-aks-kubeconfig
-```
-
-Use the actual absolute kubeconfig path in Phase 2. Azure RBAC assignment propagation may take time. Keep this file outside Git. The namespaces root never reads a kubeconfig from cluster Terraform state.
-
-## Initial namespace networking
-
-Policies permit same-namespace pod traffic and DNS to standard Kubernetes CoreDNS in `kube-system` (`k8s-app=kube-dns`), while other pod ingress/egress is denied by default on an enforcing CNI. Gateway ingress, backend egress and future SaaS management endpoints must be explicitly added when their addresses/ports are known. DNS upstreams are not restricted by these pod policies; host traffic and cluster administrators are outside this boundary.
-
-The shared module now includes an OpenShift DNS preset (openshift-dns / daemonset-dns=default / port 5353); choose platform=openshift and verify the actual namespace, labels and ports. The DNS override supports alternative distributions. Validate enforcement with real test pods before claiming isolation. Terraform mock tests verify configuration shape, not live network behaviour.
-
-## Cost and approval
-
-No creation is authorized yet. At the earlier price check, each F4s v2 Linux node was USD 0.2134/hour: two nodes cost USD 0.4268/hour, or USD 311.56/month at 730 hours. Previous planning envelope: **USD 350–390/month additional** including disks/network/light operations, excluding existing broker VM, tax and MuleSoft licenses. Recheck the estimate before deployment; Cilium capacity and future gateway resources must be evaluated at that time.
-
-Stop after provisioning/testing to avoid ongoing compute when unused. Persistent disk/network/state costs remain: see [on-demand operation](On-Demand-Betrieb.md). No stop schedule has been activated. Free tier is free cluster management, not free nodes or storage.
-
-Previous read-only quota results: regional 2/10 vCPU used, Fsv2 0/10 used. Two nodes add eight vCPU; normal one-node surge requires regional quota at least 14 and family quota at least 12. No quota increase was requested. The F4s v2 SKU listed no regional restrictions; live capacity remains unconfirmed. Exact patch selection and all deployment preflight checks remain pending.
-
-`approved_for_billable_creation` and `approved_for_cluster_changes` default false. Both roots have destruction protection for their principal resources. Neither guard replaces an approval process. No AKS-managed resource group, existing Helm release, broker data or existing K3s resources are modified by these preparations.
-
-## Git, ownership and testing
-
-Code is in draft PR #4 of Valion-AG/FZAG. Nothing auto-applies it. Infrastructure and initial namespaces/network policies are Terraform-owned; future Argo applications should own the gateway workload resources, not compete for these same objects.
-
-The AzureRM 4.59 resource-group validator rejects the umlaut in the existing group name. AKS is therefore created through the official Azure AzAPI provider using the group's exact ARM ID; AzureRM handles identity lookup and scoped role assignment. Existing group name is preserved. API version 2025-04-01 was confirmed in the Azure provider listing.
-
-Local validation uses Terraform init/validate and **mock-provider plan tests**, without Azure resources or Kubernetes calls. Provider lock files include Linux and Windows hashes. Validation covers the Azure root, single-site root and connected-lab root; the common module is exercised through the latter two. `validate.sh` can run the same checks locally or in a future CI workflow; no GitHub Actions workflow or automatic deployment has been activated.
-
-Remaining post-deployment tests: real Azure plan/apply, nodes Ready, Entra login, DNS, network-policy enforcement, stop/start recovery, and later actual gateway installation/connectivity. The code does not claim those tests have already passed.
+Changes are in draft PR #4, not merged or automatically applied.
