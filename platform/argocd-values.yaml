@@ -1,0 +1,37 @@
+# Tiny single-node PoC; chart argo/argo-cd 10.10.5, application v3.5.5.
+crds:
+  keep: true
+controller:
+  replicas: 1
+  resources:
+    requests: {cpu: 25m, memory: 128Mi}
+    limits: {cpu: 500m, memory: 256Mi}
+server:
+  replicas: 1
+  service:
+    type: ClusterIP
+  resources:
+    requests: {cpu: 10m, memory: 64Mi}
+    limits: {cpu: 250m, memory: 128Mi}
+repoServer:
+  replicas: 1
+  resources:
+    requests: {cpu: 10m, memory: 96Mi}
+    limits: {cpu: 500m, memory: 256Mi}
+redis:
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}
+    limits: {cpu: 150m, memory: 64Mi}
+dex:
+  enabled: false
+applicationSet:
+  replicas: 0
+notifications:
+  enabled: false
+configs:
+  cm:
+    timeout.reconciliation: 60s
+  params:
+    controller.status.processors: 2
+    controller.operation.processors: 1
+    reposerver.parallelism.limit: 1

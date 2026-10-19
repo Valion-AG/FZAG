@@ -12,8 +12,11 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: interop
-  # First adoption requires an explicit reviewed sync. Enable selfHeal only
-  # after the rendered/live comparison and protocol regression tests pass.
+  # Adopted after live diff and protocol validation; keep data out of pruning.
   syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+      allowEmpty: false
     syncOptions:
       - RespectIgnoreDifferences=true
