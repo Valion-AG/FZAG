@@ -1,24 +1,13 @@
-# Runtime Fabric Terraform
+# Runtime Fabric infrastructure and GitOps proposal
 
-**Current entry point: [Apply-Runtime-Fabric.md](Apply-Runtime-Fabric.md).** This bundle is now focused on preparing/installing Runtime Fabric, not Omni Gateway, Crossplane, Anypoint SaaS provisioning or Private Cloud Edition.
+Start with [the quickstart](Apply-Runtime-Fabric.md).
 
-| Path | Use |
-|---|---|
-| `runtime-fabric/` | Main Terraform root: prepare namespaces now, optionally install the official RTF chart later |
-| `runtime-fabric/profiles/` | Azure, ZRH and MCDP example inputs |
-| `modules/runtime-foundation/` | Shared stage namespace implementation |
-| `terraform/` | Optional Azure AKS cluster provisioning; still needs cost approval and refreshed preflight |
+**UC 1B requires installation through Argo CD using the manufacturer's chart/operator.** No manual `kubectl apply` or `helm install`; a Terraform Helm release does not demonstrate this workflow either.
 
-Run the RTF root **once per supported cluster**, with a separate working directory/state and explicit kubeconfig/context for each infrastructure. One fabric can use DEV/INT/PROD authorized application namespaces; the Terraform does not deploy Mule applications.
+Terraform prepares infrastructure. Git defines the runtime configuration; Argo CD deploys and reconciles it. The previous direct Terraform RTF installation has been removed. `runtime-fabric/` remains a namespace-only bootstrap/reference root, not the tender installation path. Do not co-own its namespaces with Argo CD.
 
-Default: `install_runtime_fabric=false`. This prepares `rtf` and the three worker namespaces without credentials or activated MuleSoft software. Set the flag true only after the documented activation, licensing, platform and networking prerequisites are met. There is no Private Cloud control-plane installation in this root.
+The actual RTF Argo Application remains pending entitlement, supported chart/platform selection and verified protected secret delivery. No MuleSoft software or new AKS cluster has been deployed. Azure provisioning remains subject to fresh quota/cost checks and spending approval. On-premises hosting remains undecided.
 
-ZRH/MCDP cluster hosting remains undecided; their cluster provisioning adapters cannot be completed until that is chosen. The RTF installation path/version must support the actual Kubernetes distribution. Generic/OpenShift namespace compatibility alone is not evidence of RTF product support. MCDP additionally needs approved disconnected RTF/private-control-plane compatibility and local artifact supply.
+The older `all-sites/`, `runtime-namespaces/` and three-site guides are infrastructure references, not proof of UC 1B compliance. No management plane, Omni Gateway or Mule application is installed by this proposal.
 
-The Azure AKS candidate remains two F4s v2 nodes in Switzerland North and the existing resource group. No Azure resources were created. Previous estimated extra continuous cost USD 350–390/month is not a new approval; exact patch, quota and cost checks must be refreshed before creation. See [on-demand operation](On-Demand-Betrieb.md) for residual costs when stopped.
-
-The older `runtime-namespaces/`, `all-sites/`, top-level `profiles/` and Three-Sites guide are retained from the broader foundation proposal. **Do not apply those roots to the same resources as `runtime-fabric/`.** Use the RTF-specific guide and profiles for the narrowed scope. Terraform owns the RTF namespace/authorization/Helm installation here; do not add a competing Argo/Helm owner.
-
-Validation: Terraform provider validation and four mocked RTF plan tests pass; seven existing shared-foundation regression tests also pass. No private vendor chart was downloaded or tested. No deployment, license activation, live networking or Mule application test has occurred.
-
-Changes are in draft PR #4, not merged or automatically applied.
+Validation: three mocked namespace/guard tests; no live RTF installation or vendor chart validation. Draft PR #4 is not merged or automatically applied.
