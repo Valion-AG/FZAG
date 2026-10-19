@@ -1,4 +1,12 @@
-# Copy to a private local inputs file; refresh the exact patch before deployment.
+# Template only. No deployment until private inputs, vendor compatibility and spending approval are complete.
 admin_object_id = "REPLACE_WITH_YOUR_ENTRA_OBJECT_ID"
-kubernetes_version = "1.36.4"
+kubernetes_version = "REPLACE_WITH_SUPPORTED_PATCH"
+cluster_name = "aks-fzag-runtime"
+resource_group_name = "flughafen-zürich-poc"
+node_resource_group_name = "rg-fzag-runtime-nodes"
+node_count = 2
+node_vm_size = "Standard_D4as_v5"
+node_os_disk_size_gb = 512
+admin_cidrs = ["REPLACE_WITH_ADMIN_IP/32"]
+rtf_platform_review_confirmed = false
 approved_for_billable_creation = false

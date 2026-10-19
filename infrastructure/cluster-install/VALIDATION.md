@@ -13,3 +13,5 @@ Not verified: cluster bootstrap, CMP execution, real MuleSoft chart/hook/CRD ren
 No Azure resources were created or modified during these checks.
 
 To repeat offline rendering checks with Bash and Helm installed: `bash tests/render-smoke.sh`. The test uses a temporary copy and fake chart, not real credentials. Run `terraform -chdir=bootstrap init -backend=false` followed by `terraform -chdir=bootstrap test` for the mocked plans.
+
+Template revision: the Azure adapter additionally passes five mocked tests for approval, diagram defaults, platform review, undersized VM rejection and undersized disk rejection. Its candidate baseline is now configurable Dasv5/512 GiB, not the previous F4s/64 GiB proposal. The foundation values schema validates the three site keys and required environment IDs when RTF is enabled. No live infrastructure or runtime installation was performed for this revision.

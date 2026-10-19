@@ -23,6 +23,47 @@ variable "subscription_id" {
   type    = string
   default = "6f5e5d9c-cd3f-4dec-8ade-410c01c8195f"
 }
+variable "cluster_name" {
+  type    = string
+  default = "aks-fzag-runtime"
+}
+variable "resource_group_name" {
+  type    = string
+  default = "flughafen-zürich-poc"
+}
+variable "node_resource_group_name" {
+  type    = string
+  default = "rg-fzag-runtime-nodes"
+}
+variable "node_count" {
+  type    = number
+  default = 2
+  validation {
+    condition     = var.node_count >= 2 && floor(var.node_count) == var.node_count
+    error_message = "RTF template requires at least two nodes."
+  }
+}
+variable "node_vm_size" {
+  type    = string
+  default = "Standard_D4as_v5"
+  validation {
+    condition     = contains(["Standard_D4as_v5", "Standard_D8as_v5", "Standard_D16as_v5"], var.node_vm_size)
+    error_message = "Use a reviewed x86-64 Dasv5 size with at least 16 GiB RAM; the old 8 GiB F4s v2 candidate is unsuitable. Review regional availability separately."
+  }
+}
+variable "node_os_disk_size_gb" {
+  type    = number
+  default = 512
+  validation {
+    condition     = var.node_os_disk_size_gb >= 512 && floor(var.node_os_disk_size_gb) == var.node_os_disk_size_gb
+    error_message = "Use at least 512 GiB provisioned OS disk here to leave headroom above the 250 GiB available-space requirement. Verify actual free space later."
+  }
+}
+variable "rtf_platform_review_confirmed" {
+  type        = bool
+  default     = false
+  description = "Confirm vendor/chart/Kubernetes compatibility, regional SKU availability, capacity, quota and cost review before provisioning."
+}
 variable "admin_object_id" {
   description = "Entra object ID of the authorized demo administrator."
   type        = string
@@ -38,6 +79,10 @@ variable "admin_cidrs" {
 variable "kubernetes_version" {
   description = "Select an exact currently offered patch after controller compatibility review."
   type        = string
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.kubernetes_version))
+    error_message = "Replace the template placeholder with an exact supported Kubernetes patch."
+  }
 }
 variable "approved_for_billable_creation" {
   type        = bool
@@ -49,18 +94,18 @@ data "azurerm_client_config" "current" {}
 # AzAPI addresses the existing RG by its exact ARM ID; it does not rename it.
 resource "azapi_resource" "demo" {
   type      = "Microsoft.ContainerService/managedClusters@2025-04-01"
-  name      = "aks-fzag-runtime"
+  name      = var.cluster_name
   location  = "switzerlandnorth"
-  parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/flughafen-zürich-poc"
+  parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
   identity {
     type = "SystemAssigned"
   }
   body = {
     sku = { name = "Base", tier = "Free" }
     properties = {
-      dnsPrefix            = "fzag-runtime"
+      dnsPrefix            = var.cluster_name
       kubernetesVersion    = var.kubernetes_version
-      nodeResourceGroup    = "rg-fzag-runtime-nodes"
+      nodeResourceGroup    = var.node_resource_group_name
       enableRBAC           = true
       disableLocalAccounts = true
       aadProfile = {
@@ -71,9 +116,9 @@ resource "azapi_resource" "demo" {
       apiServerAccessProfile = { authorizedIPRanges = var.admin_cidrs }
       agentPoolProfiles = [{
         name            = "system"
-        count           = 2
-        vmSize          = "Standard_F4s_v2"
-        osDiskSizeGB    = 64
+        count           = var.node_count
+        vmSize          = var.node_vm_size
+        osDiskSizeGB    = var.node_os_disk_size_gb
         osDiskType      = "Managed"
         osType          = "Linux"
         type            = "VirtualMachineScaleSets"
@@ -101,6 +146,10 @@ resource "azapi_resource" "demo" {
       condition     = var.approved_for_billable_creation
       error_message = "Obtain explicit spending approval and pass quota/provider/version checks before deployment."
     }
+    precondition {
+      condition     = var.rtf_platform_review_confirmed
+      error_message = "Template only: confirm exact RTF/platform support and refresh sizing, regional availability, quota and costs before provisioning."
+    }
   }
 }
 resource "azurerm_role_assignment" "admin" {
@@ -112,5 +161,5 @@ output "cluster_name" {
   value = azapi_resource.demo.name
 }
 output "resource_group_name" {
-  value = "flughafen-zürich-poc"
+  value = var.resource_group_name
 }

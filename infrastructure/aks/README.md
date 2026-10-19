@@ -1,4 +1,6 @@
-# Runtime Fabric: developer quickstart
+# Azure infrastructure template
+
+**Status: templates only; no installation or provisioning is requested.**
 
 Use the [reusable cluster installer](../cluster-install/README.md) once a supported Kubernetes cluster exists. It bootstraps Argo CD and the stage layout, then optionally deploys the official RTF chart through Argo CD using private vendor inputs. It is locally/render-tested, not yet live-cluster or real-vendor-chart validated.
 
@@ -22,3 +24,5 @@ Follow [infrastructure/cluster-install/README.md](../cluster-install/README.md).
 - No Anypoint management plane, ingress controller or Mule applications are included. Application connectivity between sites is not required for the foundation; actual RTF readiness requires its vendor prerequisites.
 
 The previous `runtime-fabric/`, `runtime-namespaces/` and `all-sites/` namespace Terraform roots are reference alternatives. Do not apply them to resources owned by the new installer. UC 1B requires the vendor runtime deployment through Argo CD; Terraform bootstrap is a separate boundary to agree for the demonstration.
+
+The former F4s v2 / 64 GiB configuration is superseded. The current candidate uses configurable Dasv5 nodes (at least 16 GiB RAM), 512 GiB OS disks and a platform-review guard, with spending approval disabled. Previous cost estimates for the former configuration must not be reused. See the template examples for inputs.

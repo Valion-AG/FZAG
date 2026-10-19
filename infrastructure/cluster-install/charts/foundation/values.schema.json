@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "site": {
+      "enum": [
+        "azure",
+        "zrh",
+        "mcdp"
+      ]
+    },
+    "rtfEnabled": {
+      "type": "boolean"
+    },
+    "organizationId": {
+      "type": "string"
+    },
+    "registryDockerConfig": {
+      "type": "string"
+    },
+    "stages": {
+      "type": "object",
+      "required": [
+        "dev",
+        "int",
+        "prod"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dev": {
+          "type": "object",
+          "required": [
+            "environmentId"
+          ],
+          "properties": {
+            "environmentId": {
+              "type": "string"
+            }
+          }
+        },
+        "int": {
+          "type": "object",
+          "required": [
+            "environmentId"
+          ],
+          "properties": {
+            "environmentId": {
+              "type": "string"
+            }
+          }
+        },
+        "prod": {
+          "type": "object",
+          "required": [
+            "environmentId"
+          ],
+          "properties": {
+            "environmentId": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "site",
+    "rtfEnabled",
+    "stages"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "rtfEnabled": {
+            "const": true
+          }
+        },
+        "required": [
+          "rtfEnabled"
+        ]
+      },
+      "then": {
+        "required": [
+          "organizationId",
+          "registryDockerConfig"
+        ],
+        "properties": {
+          "organizationId": {
+            "minLength": 1
+          },
+          "registryDockerConfig": {
+            "minLength": 1
+          },
+          "stages": {
+            "properties": {
+              "dev": {
+                "properties": {
+                  "environmentId": {
+                    "minLength": 1
+                  }
+                }
+              },
+              "int": {
+                "properties": {
+                  "environmentId": {
+                    "minLength": 1
+                  }
+                }
+              },
+              "prod": {
+                "properties": {
+                  "environmentId": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

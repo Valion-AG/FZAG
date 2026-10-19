@@ -6,15 +6,9 @@ Der vorbereitete Zwei-Node-AKS muss nicht durchgehend laufen. Nach Installation 
 
 ## Planungskosten
 
-Node-Rechenpreis aus der Preisabfrage: 2 x USD 0.2134 = USD 0.4268 je laufender Clusterstunde, einschliesslich Installation, Tests und Vorlauf. Keine Preisgarantie; Steuer, Wechselkurs und MuleSoft-Lizenzen ausgeschlossen.
+Die frueheren F4s-v2-Kostenannahmen sind ueberholt und gelten nicht fuer das aktuelle RTF-Template. Der bisherige 8-GiB-Knoten und die 64-GiB-Disk waren zu klein. Die neue Hardware-Kandidatur verwendet standardmaessig zwei D4as-v5-Knoten mit 16 GiB RAM und 512 GiB OS-Disk je Knoten.
 
-| Nutzung des zusaetzlichen AKS | Planung |
-|---|---|
-| Rund um die Uhr | Bisheriger Rahmen USD 350–390/Monat |
-| Ganzen Monat gestoppt, Ressourcen bleiben bestehen | Fuer Disks und ggf. weiter bestehende Netzwerk-/Zustandsressourcen vorsichtig USD 40–80/Monat zurueckstellen; konkreten Restbetrag anhand der tatsaechlichen Ressourcen pruefen |
-| Beispiel 40 aktive Stunden im Monat | USD 17.07 Node-Rechenzeit plus Restressourcen; vorsichtiger Rahmen USD 57–97/Monat |
-
-Die Restkostenschaetzung ist ein Budgetpuffer, keine verifizierte Rechnung fuer einen gestoppten Cluster. Der Free-Tier-Verwaltungspreis macht persistente Disks und Netzwerkressourcen nicht kostenlos. Keine bezahlten Zusatzdienste oder neuen Monitoring-Plaene einschalten. Terraform-Zustand muss ausserhalb kurzlebiger Provider-Prozesse sicher erhalten bleiben und kann weitere kleine Speicherkosten verursachen.
+Vor jeder Bereitstellung sind der aktuelle Compute-Preis, Disk-/Netzwerkkosten, Quota inklusive Upgrade-Surge, regionale SKU-Verfuegbarkeit und Herstellerkompatibilitaet erneut zu pruefen. Es gibt dafuer noch keine aktuelle Kostenfreigabe. Ein gestoppter AKS-Cluster kann weiterhin Kosten fuer persistente Disks und weitere Ressourcen verursachen.
 
 ## Vorgehen nach ausdruecklicher Freigabe
 
