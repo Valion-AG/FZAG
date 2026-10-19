@@ -1,61 +1,42 @@
-# Runtime Fabric: quickstart
+# Runtime Fabric: developer quickstart
 
-**Workflow: Terraform provisions infrastructure -> Git describes the runtime -> Argo CD installs and reconciles it.**
+Terraform provisions cluster infrastructure. Argo CD reconciles the vendor RTF chart and runtime configuration from Git. Anypoint manages the registered fabric and Mule applications.
 
-## Current status
+**Status:** infrastructure code is available; no new AKS cluster or RTF installation has been deployed. The RTF Argo CD Application, protected secret integration and exact supported chart/platform selection are pending. The GitOps examples below describe the target configuration, not an executable RTF deployment.
 
-The infrastructure proposal was merged in [PR #4](https://github.com/Valion-AG/FZAG/pull/4); merging code does not deploy Runtime Fabric. No new AKS cluster or MuleSoft software has been deployed. A deployable RTF Argo CD Application is still pending MuleSoft access, supported chart/platform selection and protected secret delivery.
+## Validate locally
 
-## How to use it
-
-Start with **Azure only**. ZRH and MCDP come later, once their infrastructure is known.
-
-### Try it now: download and check the code
-
-With Git and Terraform installed, open PowerShell:
+Requires Git and Terraform. From the repository root:
 
 ```powershell
-git clone https://github.com/Valion-AG/FZAG.git
-cd FZAG/infrastructure/aks
+cd infrastructure/aks
 terraform -chdir=terraform init -backend=false
 terraform -chdir=terraform validate
+terraform -chdir=runtime-fabric init -backend=false
+terraform -chdir=runtime-fabric test
 ```
 
-Already cloned it? Use your existing checkout instead of cloning again.
+Expected: valid infrastructure configuration and three passing mocked namespace/guard tests. These commands do not provision resources, contact a real Kubernetes cluster or validate the vendor chart.
 
-**Expected:** `The configuration is valid.` You now have the files and have checked their syntax. These commands download Terraform providers but create no Azure resources. They do not check Azure permissions, quota or MuleSoft compatibility.
+## Configure infrastructure
 
-### Later: create the Azure cluster
+Azure target: **Switzerland North**, resource group **flughafen-zürich-poc**. Start with one runtime cluster and separate DEV / INT / PROD application stages.
 
-AKS provides the computers that run Runtime Fabric. Terraform creates this infrastructure.
+- `terraform/`: AKS infrastructure; review `terraform.tfvars.example` and keep actual inputs/state private. Confirm the exact RTF-supported Kubernetes version, permissions, quota and costs before provisioning. The example version is not confirmed for RTF. Billable creation still requires approval.
+- ZRH/MCDP: cluster provisioning depends on the infrastructure selected later. Verify the actual distribution and installation track with MuleSoft.
+- `runtime-fabric/`: legacy namespace-only bootstrap/reference. Direct RTF installation is disabled. Do not use it to manage namespaces that Argo CD will own.
 
-For our example: use **Switzerland North**, resource group **flughafen-zürich-poc**, and one Azure runtime cluster with DEV / INT / PROD application stages.
+Infrastructure provisioning is separate from Argo synchronization; merging runtime configuration does not create AKS. No infrastructure auto-apply pipeline is configured here.
 
-Before creation, check costs, quota, permissions and the RTF-supported Kubernetes version. The example version in the code is not confirmed for RTF. **Creation still needs cost approval**, so there is no deployment command to run at this stage.
+## Configure the deployment target
 
-### Later: install Runtime Fabric through Git
+Use a separate Argo CD Application per site. Its source selects the Git configuration; its destination selects the existing registered cluster.
 
-We first need MuleSoft access, activation data, a supported chart version and the missing Argo CD deployment configuration. Keep licenses and passwords outside Git.
-
-### How to create the pull request
-
-GitHub calls a merge request a **pull request (PR)**. Once the deployment files are ready:
-
-1. Open [FZAG on GitHub](https://github.com/Valion-AG/FZAG).
-2. From the branch selector, create a branch from `main`, for example `deploy/azure-runtime`.
-3. Open the deployment file you want to change, click the pencil icon, edit it and choose **Commit changes** to your new branch.
-4. Open **Pull requests -> New pull request**. Select `main` as the **base** and `deploy/azure-runtime` as the **compare** branch.
-5. Review the changed files, then click **Create pull request**. Example title: "Install Runtime Fabric in Azure".
-6. After review, click **Merge pull request**. If repository rules require checks or another reviewer, complete those first.
-
-The PR changes configuration; it does not select a deployment target by itself. Editing this README only changes documentation.
-
-### Where do I tell it to deploy?
-
-An **Argo CD Application** connects configuration in Git to a Kubernetes cluster. The following is an illustrative Application `spec` excerpt, **not a ready-to-use deployment file**:
+Illustrative Application `spec` excerpt (placeholder path and endpoint):
 
 ```yaml
 spec:
+  project: fzag-runtime
   source:
     repoURL: https://github.com/Valion-AG/FZAG.git
     targetRevision: main
@@ -63,63 +44,41 @@ spec:
   destination:
     server: https://YOUR-AKS-API-ENDPOINT
     namespace: rtf
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
 ```
 
-| Setting | What you enter |
+Before enabling synchronization:
+
+- Register the cluster and repository with Argo CD; configure an AppProject permitting the source and destination. The example project `fzag-runtime` must be created or replaced.
+- Implement the referenced Git source using the pinned, supported vendor chart and reviewed values. The example folder is not supplied by this proposal. Validate the selected chart's Argo rendering behavior and lifecycle requirements.
+- Deliver chart/registry credentials, activation data and licensing through the agreed protected integration. Do not commit secrets or invent chart secret-reference fields.
+- Define worker namespaces, real organization/environment IDs and required authorizations separately. `destination.namespace: rtf` is the default for runtime components, not the DEV/INT/PROD stage mapping; explicit manifest namespaces take precedence.
+
+For ZRH, use its own source configuration and registered cluster endpoint. Isolated MCDP requires confirmed offline/private-control-plane compatibility and internal Git, registry and Argo CD. The Azure region belongs to Terraform infrastructure configuration, not the Argo destination namespace.
+
+## Deploy and verify
+
+Once the missing integration is implemented, merge the site configuration into the tracked branch. With the example automatic sync policy, Argo CD reconciles it and repairs drift. If automatic sync is disabled, trigger an Argo CD sync instead.
+
+Verify:
+
+1. Argo CD: correct destination, expected revision, **Synced**, **Healthy**.
+2. Anypoint Runtime Manager: fabric registered and connected; correct environment associations.
+3. Runtime/application checks: expected namespace authorization and end-to-end test traffic. Argo health alone does not prove successful Anypoint registration or application connectivity.
+
+UC 1B requires deployment/reconciliation through Argo CD using the manufacturer's chart/operator. Do not replace this with manual `kubectl apply`, `helm install` or Terraform `helm_release`. Read-only `kubectl get`, `describe` and `logs` can support verification. Agree the bootstrap boundary before the demonstration.
+
+## Change examples
+
+| Change | Configuration to update |
 |---|---|
-| `targetRevision` | The branch Argo CD watches, here `main` |
-| `path` | The Git folder containing the deployment configuration |
-| `destination.server` | The API endpoint of the intended cluster, already registered with Argo CD |
-| `destination.namespace` | The default namespace for namespaced resources, here `rtf` |
+| Deploy to Azure instead of ZRH | Site-specific Application source and registered cluster destination |
+| Upgrade RTF | Pinned vendor chart version and compatible values; validate vendor upgrade requirements |
+| Roll back | Revert the relevant Git change, subject to vendor rollback and backup requirements |
+| Add an application stage | Environment mapping, worker namespace and authorizations; not just the Application namespace |
+| Add MCDP | Internal sources/destination and verified disconnected installation configuration |
 
-The example folder and endpoint are placeholders. The completed Application needs additional settings, the real vendor chart integration and protected secret delivery. The cluster must exist, and Argo CD must have access and an AppProject permitting the source and destination. The `rtf` namespace hosts runtime components; DEV/INT/PROD application namespaces and authorizations are configured separately. A namespace explicitly set in a manifest takes precedence over the Application's default.
-
-For example, Azure and ZRH would have separate Applications pointing to their respective clusters and site configuration. Isolated MCDP uses its internal Git, registry and controller. You do not choose the region in the pull request form: Terraform configures the Azure infrastructure region; the Application points to the resulting cluster.
-
-### What happens after merging?
-
-With automatic synchronization and self-healing configured:
-
-**Merge into main -> Argo CD detects the change -> deploys to the configured cluster -> check Synced / Healthy.**
-
-Without automatic synchronization, merge first and then click **Sync** in Argo CD. Neither option involves a manual `kubectl apply` or `helm install`.
-
-Open the Application in Argo CD to check its **Destination**, **Sync status**, **Health** and deployed resources. Then check in Anypoint Runtime Manager that the fabric is registered and connected. Argo health alone does not prove Anypoint registration or working application traffic.
-
-**Current limit:** the RTF Application, target-cluster connection and protected MuleSoft credentials are still pending. A README merge does not deploy RTF, and this example cannot deploy anything yet.
-
-### Examples of everyday changes
-
-| What you want | What you do once GitOps is ready |
-|---|---|
-| Install RTF in Azure | Merge the reviewed Azure runtime configuration; Argo CD installs it |
-| Upgrade RTF | Change the pinned chart version to a supported release in Git; review and merge |
-| Undo an update | Revert the Git change, following vendor rollback and backup requirements |
-| Add ZRH | Prepare its supported cluster and separate site configuration, then deploy through Argo CD |
-| Add isolated MCDP | Confirm offline support first; use internal Git, registry and Argo CD inside MCDP |
-
-For example, an upgrade PR changes the chart version from the current approved release to the next approved release. After merging, watch Argo CD perform the update. You do not run `helm install` yourself.
-
-**Today you can download and validate the code.** Actual cluster creation needs approval; RTF installation needs MuleSoft access and the remaining GitOps integration.
-
-
-
-## Which tool does what?
-
-| Tool | Purpose |
-|---|---|
-| Terraform | Provision the underlying infrastructure |
-| Git / GitHub | Review and version the desired configuration |
-| Argo CD | Deploy and continuously reconcile the runtime |
-| Anypoint | Register/manage RTF and deploy Mule applications once access is available |
-
-UC 1B explicitly requires the manufacturer's chart/operator **through Argo CD**: no manual `kubectl apply` or `helm install`. A Terraform `helm_release` does not replace that workflow. Read-only `kubectl get`, `describe` and `logs` can help verify the result.
-
-## Folders and limits
-
-- `terraform/`: optional, cost-gated Azure AKS infrastructure.
-- `runtime-fabric/`: legacy namespace-only bootstrap/reference; direct RTF installation is blocked. **Do not apply it to resources Argo CD will own.**
-- `modules/runtime-foundation/`: shared namespace implementation.
-- Older `all-sites/`, `runtime-namespaces/` and three-site guides: infrastructure references, not the UC 1B installation path.
-
-See [additional prerequisites and boundaries](Apply-Runtime-Fabric.md). This scope does not install a private management plane, Omni Gateway or Mule applications. Three mocked namespace/guard tests pass; no live vendor chart or RTF installation has been validated. There is no automatic deployment of this RTF proposal.
+Additional prerequisites: [Apply-Runtime-Fabric.md](Apply-Runtime-Fabric.md). The older `all-sites/` and `runtime-namespaces/` roots are infrastructure references, not the UC 1B RTF deployment path. This scope does not install a private management plane, Omni Gateway or Mule applications.
