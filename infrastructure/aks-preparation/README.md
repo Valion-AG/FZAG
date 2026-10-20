@@ -30,4 +30,4 @@ kubectl --context aks-fzag-prep get nodes
 kubectl --context aks-fzag-prep get namespace mulesoft
 ```
 
-API access is limited to the approved office IP. If your egress IP changes, update the reviewed Terraform allowlist before connecting. Do not run `terraform init/apply` from a fresh clone with empty state against these existing resources: retain/use the existing protected state or perform a deliberate reviewed state migration/import.
+API access is limited to the approved office IP and the added Cloud Shell session IP (see STATUS.md). If your egress IP changes, update the reviewed Terraform allowlist before connecting. Do not run `terraform init/apply` from a fresh clone with empty state against these existing resources: retain/use the existing protected state or perform a deliberate reviewed state migration/import.
