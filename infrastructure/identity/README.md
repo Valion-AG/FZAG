@@ -9,7 +9,7 @@ Two registrations were created in the current Valion demo tenant on 20 October 2
 
 The SSO client secret is stored as `anypoint-sso-client-secret` in Key Vault `kv-fzaginterop261019`; it is not in Git. Environment-specific copy/paste configuration was delivered separately to the user.
 
-Pending: the exact Anypoint-generated callback URL, Anypoint identity-provider/team configuration, any tenant-required consent, API calling-client registration/grants, gateway policy configuration and end-to-end tests. No callback was guessed; no tenant-wide admin consent or application-role grants were made. No paid identity feature or extra cluster was enabled.
+The user-provided Anypoint EU callback is now registered as a Web redirect URI and verified in Entra. Pending: a live Anypoint SSO login, team/permission mapping, any tenant-required consent, API calling-client registration/grants, gateway policy configuration and end-to-end tests. No callback was guessed; no tenant-wide admin consent or application-role grants were made. No paid identity feature or extra cluster was enabled.
 
 Anypoint SSO and API authorization are separate. API enforcement must validate access-token signature, issuer, audience, lifetime and `scp`/`roles` permissions. A registered API resource alone does not secure a running API.
 
