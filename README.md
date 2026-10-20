@@ -39,3 +39,7 @@ Start with [the Runtime Fabric quickstart](infrastructure/cluster-install/README
 ## Git-controlled Mule application replicas
 
 Use [the RTF application quickstart](infrastructure/rtf-apps/README.md) to manage replicas and CPU/memory with the vendor Anypoint Controller and Argo CD. Templates default to disabled until real target/artifact inputs and private Anypoint credentials are configured. This does not directly patch RTF-managed Kubernetes Deployments. Live reconciliation must be validated on the actual cluster.
+
+## AKS replica demo (no RTF required)
+
+Edit [the AKS workload values](infrastructure/aks-gitops/workload/values.yaml) to change replica count through Git and Argo CD. See [the quickstart](infrastructure/aks-gitops/README.md). This is a generic Kubernetes demo; RTF application templates remain inactive.

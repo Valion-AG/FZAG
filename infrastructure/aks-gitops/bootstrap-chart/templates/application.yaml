@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fzag-k8s-demo
+  namespace: argocd
+spec:
+  sourceRepos:
+    - https://github.com/Valion-AG/FZAG.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: fzag-k8s-demo
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fzag-aks-demo
+  namespace: argocd
+spec:
+  project: fzag-k8s-demo
+  source:
+    repoURL: https://github.com/Valion-AG/FZAG.git
+    targetRevision: main
+    path: infrastructure/aks-gitops/workload
+    helm:
+      releaseName: fzag-k8s-demo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fzag-k8s-demo
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true

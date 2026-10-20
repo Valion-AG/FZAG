@@ -1,0 +1,4 @@
+apiVersion: v2
+name: fzag-aks-gitops-root
+type: application
+version: 0.1.0

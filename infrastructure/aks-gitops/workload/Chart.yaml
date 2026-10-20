@@ -1,0 +1,5 @@
+apiVersion: v2
+name: fzag-kubernetes-demo
+description: Lightweight Kubernetes GitOps demonstration; not MuleSoft or RTF
+type: application
+version: 0.1.0
