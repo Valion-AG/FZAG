@@ -1,5 +1,5 @@
 # Change replicas: 1 -> 2 and commit. Argo CD reconciles automatically.
-replicas: 1
+replicas: 2
 image: docker.io/nginxinc/nginx-unprivileged:1.28-alpine
 resources:
   requests:
