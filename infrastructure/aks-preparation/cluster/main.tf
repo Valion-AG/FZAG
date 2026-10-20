@@ -30,7 +30,7 @@ variable "cluster_name" {
 }
 variable "resource_group_name" {
   type    = string
-  default = "flughafen-zürich-poc"
+  default = "flughafen-zuerich-poc"
 }
 variable "node_resource_group_name" {
   type    = string
@@ -86,13 +86,18 @@ variable "approved_for_billable_creation" {
   description = "Keep false until user approves incremental costs and preflight passes."
 }
 data "azurerm_client_config" "current" {}
-# AzureRM 4.59 rejects the umlaut in the existing RG name during validation.
-# AzAPI addresses the existing RG by its exact ARM ID; it does not rename it.
+resource "azurerm_resource_group" "preparation" {
+  name     = var.resource_group_name
+  location = "switzerlandnorth"
+  tags     = { purpose = "fzag-mulesoft-preparation", managedBy = "Terraform" }
+  lifecycle { prevent_destroy = true }
+}
+# Separate ASCII resource group authorized after AKS rejected the original umlaut name.
 resource "azapi_resource" "demo" {
   type      = "Microsoft.ContainerService/managedClusters@2025-04-01"
   name      = var.cluster_name
   location  = "switzerlandnorth"
-  parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+  parent_id = azurerm_resource_group.preparation.id
   identity {
     type = "SystemAssigned"
   }

@@ -1,12 +1,11 @@
-# Deployment blocked — 20 October 2026
+# AKS deployment in progress — 20 October 2026
 
-Requested: a separate AKS preparation cluster and `mulesoft` namespace in Switzerland North, using only `flughafen-zürich-poc`.
+The user authorized the new `flughafen-zuerich-poc` resource group after Azure rejected the original umlaut name. The previous resource-group restriction was superseded for this AKS deployment.
 
-- User approved two F4s v2 nodes / 128 GiB disks, approximately USD 380–410/month running, and asked to leave it running.
-- Permissions, initial core quota, SKU availability and real Terraform plan were checked. The plan contained AKS plus its administrator role, no changes or deletions.
-- The Azure AKS create API rejected the request with `InvalidParameter`: `The value of parameter resourceGroupName is invalid.` The existing group contains the umlaut `ü`. The supplied node resource-group name was already ASCII.
-- The user explicitly declined creating an alternative ASCII-named resource group.
-- AKS list after the failed request was empty. Neither `rg-fzag-prep-nodes` nor the proposed alternative group exists. No cluster, node pool, administrator role assignment or namespace was created.
-- No alternative resource group, VM cluster or existing-cluster modification is authorized as a substitute.
-
-The retained Terraform and namespace definitions are preparation/reference source. They are **not a successful deployment**. Creation in the required resource group remains blocked until the AKS provider accepts it or the user changes the constraint. No automatic deployment workflow is configured.
+- Region: Switzerland North.
+- Cluster: `aks-fzag-prep`; node resource group: `rg-fzag-prep-nodes`.
+- Two F4s v2 nodes, 128 GiB managed OS disk per node; Free control-plane tier; Kubernetes 1.36.4.
+- Approved running estimate: USD 380–410/month, excluding existing infrastructure and licenses. User requested leaving the cluster running.
+- Reviewed saved Terraform plan: three additions (resource group, AKS, administrator role), no changes/deletions.
+- Cluster creation is in progress. Namespace creation and validation follow after readiness.
+- This is a preparation cluster with an empty `mulesoft` namespace, not a sized or activated RTF installation.
