@@ -1,0 +1,18 @@
+[
+  {
+    "replicas": 2,
+    "ready": 2,
+    "commit": "4b75a0b9ea3b7fd5f07206973eee6d7b91357211",
+    "sync": "Synced",
+    "health": "Healthy",
+    "seconds": 14
+  },
+  {
+    "replicas": 1,
+    "ready": 1,
+    "commit": "dc569119cff0d5e0a40fee8da39b9b671bd0a43a",
+    "sync": "Synced",
+    "health": "Healthy",
+    "seconds": 15
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "cluster": "aks-fzag-prep",
+  "powerState": "Running",
+  "provisioningState": "Succeeded",
+  "nodesReady": 2,
+  "argocd": "installed by Terraform; Helm chart 10.10.5",
+  "application": "fzag-aks-demo",
+  "sync": "Synced",
+  "health": "Healthy",
+  "replicas": 1,
+  "liveGitScaleTest": "1 -> 2 -> 1 passed",
+  "rtfInstalled": false,
+  "passwordVault": "kv-fzaginterop261019",
+  "passwordSecretName": "aks-argocd-admin-password",
+  "regionalVcpuQuota": 20,
+  "noPublicLoadBalancerCreated": true
+}

@@ -24,7 +24,7 @@ kubectl -n fzag-k8s-demo get deployment,pods
 kubectl -n argocd port-forward service/argocd-server 18081:80
 ```
 
-Open http://localhost:18081. Username: `admin`; obtain the initial password privately from the `argocd-initial-admin-secret` Secret in namespace `argocd`. Never commit passwords or kubeconfig files. The UI is a ClusterIP service accessible through port-forward, not a public load balancer.
+Open http://localhost:18081. Username: `admin`; password: Key Vault **kv-fzaginterop261019 → aks-argocd-admin-password**. On the original workstation, `Open-Argo.ps1` sets the workspace kubeconfig and opens the port-forward for you. Never commit passwords or kubeconfig files. The UI is a ClusterIP service accessible through port-forward, not a public load balancer.
 
 Optional workload browser check:
 
@@ -41,3 +41,7 @@ Open http://localhost:18080. Read-only kubectl observation/port-forward is separ
 The chart and app definitions are in Git; live workloads continuously reconcile from Git. The bootstrap itself is Terraform-managed, not self-managed by Argo CD. This proves Kubernetes GitOps replication, not vendor RTF installation or all UC 1B requirements.
 
 For actual Mule application replicas later, see [RTF application templates](../rtf-apps/README.md). They require installed compatible RTF, Anypoint Controller, private credentials and a real Exchange artifact. Do not edit RTF-generated Deployments directly.
+
+## Live verification
+
+Deployed to AKS on 20 October 2026. Both AKS nodes Ready, Argo CD healthy, application Synced/Healthy. Git commits changed replicas 1 → 2 → 1; each desired count reached the matching ready count in about 15 seconds. Final state: one replica. No RTF installed. See `live-validation.json` for commit evidence. AKS is left running at the user's request.
