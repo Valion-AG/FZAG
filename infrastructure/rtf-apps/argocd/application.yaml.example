@@ -1,0 +1,41 @@
+# Install via the cluster's infrastructure bootstrap after verifying the target.
+# This assumes Argo CD runs on the AKS cluster itself. For central Argo CD,
+# replace the destination server with the registered AKS server/name.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fzag-rtf-apps
+  namespace: argocd
+spec:
+  sourceRepos:
+    - https://github.com/Valion-AG/FZAG.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: fzag-rtf-*
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: rtf.mulesoft.com
+      kind: MuleApplication
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fzag-azure-mule-apps
+  namespace: argocd
+spec:
+  project: fzag-rtf-apps
+  source:
+    repoURL: https://github.com/Valion-AG/FZAG.git
+    targetRevision: main
+    path: infrastructure/rtf-apps
+    helm:
+      releaseName: fzag-rtf-apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fzag-rtf-dev
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true

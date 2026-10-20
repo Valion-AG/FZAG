@@ -1,0 +1,5 @@
+apiVersion: v2
+name: fzag-rtf-apps
+description: MuleApplication resources for the vendor Anypoint Controller
+type: application
+version: 0.1.0

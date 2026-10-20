@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "disabled defaults emit no objects",
+    "example namespace and MuleApplication with replicas 1",
+    "replicas 2 renders and retains artifact",
+    "missing required inputs rejected",
+    "negative replicas rejected"
+  ],
+  "passed": true,
+  "liveCrdAdmissionTested": false,
+  "liveReconciliationTested": false
+}

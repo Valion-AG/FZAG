@@ -1,0 +1,19 @@
+# No applications are rendered until real Anypoint/Exchange inputs are supplied.
+enabled: false
+rtfNamespace: mulesoft
+target: ""
+businessGroup: ""
+runtimeVersion: ""
+stages:
+  dev:
+    namespace: fzag-rtf-dev
+    environment: ""
+    applications: []
+  int:
+    namespace: fzag-rtf-int
+    environment: ""
+    applications: []
+  prod:
+    namespace: fzag-rtf-prod
+    environment: ""
+    applications: []

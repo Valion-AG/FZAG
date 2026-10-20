@@ -35,3 +35,7 @@ Start with [the Runtime Fabric quickstart](infrastructure/cluster-install/README
 ## AKS preparation cluster
 
 `aks-fzag-prep` is running in Switzerland North, resource group `flughafen-zuerich-poc`, with an empty `mulesoft` namespace. [Status and access instructions](infrastructure/aks-preparation/README.md). This is separate from the uninstalled RTF templates.
+
+## Git-controlled Mule application replicas
+
+Use [the RTF application quickstart](infrastructure/rtf-apps/README.md) to manage replicas and CPU/memory with the vendor Anypoint Controller and Argo CD. Templates default to disabled until real target/artifact inputs and private Anypoint credentials are configured. This does not directly patch RTF-managed Kubernetes Deployments. Live reconciliation must be validated on the actual cluster.

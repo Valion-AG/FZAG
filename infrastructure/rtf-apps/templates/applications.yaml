@@ -1,0 +1,46 @@
+{{- if .Values.enabled }}
+{{- $rtfNamespace := required "Set the actual RTF installation namespace" .Values.rtfNamespace }}
+{{- $target := required "Set the Runtime Manager target name" .Values.target }}
+{{- $businessGroup := required "Set the Anypoint business group" .Values.businessGroup }}
+{{- $runtimeVersion := required "Set an available, controller-compatible Mule runtime version" .Values.runtimeVersion }}
+{{- range $stageName, $stage := .Values.stages }}
+{{- if $stage.applications }}
+{{- $namespace := required "Set the application namespace" $stage.namespace }}
+{{- $environment := required "Set the Anypoint environment name" $stage.environment }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $namespace | quote }}
+  labels:
+    rtf.mulesoft.com/agentNamespace: {{ $rtfNamespace | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+{{- range $app := $stage.applications }}
+{{- $replicas := int (required "Set a positive replica count" $app.replicas) }}
+{{- if lt $replicas 1 }}{{ fail "replicas must be at least 1" }}{{ end }}
+---
+apiVersion: rtf.mulesoft.com/v1
+kind: MuleApplication
+metadata:
+  name: {{ required "Set the application name" $app.name | quote }}
+  namespace: {{ $namespace | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  target: {{ $target | quote }}
+  businessGroup: {{ $businessGroup | quote }}
+  environment: {{ $environment | quote }}
+  runtimeVersion: {{ $runtimeVersion | quote }}
+  application:
+    group: {{ required "Set Exchange group" $app.artifact.group | quote }}
+    artifactId: {{ required "Set Exchange artifactId" $app.artifact.artifactId | quote }}
+    version: {{ required "Set Exchange artifact version" $app.artifact.version | quote }}
+    packaging: jar
+  replicas: {{ $replicas }}
+  resources:
+{{ required "Set application resource requests/limits" $app.resources | toYaml | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

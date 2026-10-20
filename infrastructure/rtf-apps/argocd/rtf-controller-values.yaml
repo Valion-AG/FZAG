@@ -1,0 +1,10 @@
+# Merge into the EXISTING vendor rtf-agent Helm release values, preserving
+# its activation/license, registry settings and all existing configuration.
+# Requires a compatible Helm-based RTF release; do not upgrade blindly.
+global:
+  crds:
+    install: true
+agent:
+  rtfd:
+    anypointController:
+      enabled: true

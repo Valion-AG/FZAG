@@ -1,0 +1,24 @@
+# Replace every REPLACE value with actual Anypoint/Exchange inputs before use.
+enabled: true
+rtfNamespace: mulesoft
+target: REPLACE_WITH_RTF_TARGET
+businessGroup: REPLACE_WITH_BUSINESS_GROUP
+runtimeVersion: REPLACE_WITH_SUPPORTED_RUNTIME
+stages:
+  dev:
+    namespace: fzag-rtf-dev
+    environment: REPLACE_WITH_DEV_ENVIRONMENT
+    applications:
+      - name: flights-api
+        artifact:
+          group: REPLACE_WITH_EXCHANGE_GROUP_ID
+          artifactId: flights-api
+          version: "1.0.0"
+        replicas: 1
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: "1"
+            memory: 2Gi
