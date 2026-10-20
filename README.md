@@ -31,3 +31,7 @@ Start with [the Runtime Fabric quickstart](infrastructure/cluster-install/README
 ## Reusable cluster installer
 
 [Install onto a new Kubernetes cluster](infrastructure/cluster-install/README.md): bootstrap Argo CD and DEV/INT/PROD namespaces, then optionally deploy the official RTF chart with private vendor inputs. The bundle has local/render checks, but no live cluster or real vendor-chart validation. It does not install an Anypoint management plane.
+
+## AKS preparation cluster
+
+`aks-fzag-prep` is running in Switzerland North, resource group `flughafen-zuerich-poc`, with an empty `mulesoft` namespace. [Status and access instructions](infrastructure/aks-preparation/README.md). This is separate from the uninstalled RTF templates.
