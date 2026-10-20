@@ -1,3 +1,5 @@
+> Azure provisioning constraint (20 October 2026): AKS rejected `flughafen-zürich-poc` with an invalid resourceGroupName error. An alternative resource group was declined. Provisioning in the required group is blocked; see [deployment status](../aks-preparation/STATUS.md). No cluster was created.
+
 # Azure infrastructure template
 
 **Status: templates only; no installation or provisioning is requested.**

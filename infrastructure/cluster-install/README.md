@@ -1,3 +1,5 @@
+> Azure provisioning constraint (20 October 2026): AKS rejected `flughafen-zürich-poc` with an invalid resourceGroupName error. An alternative resource group was declined. Provisioning in the required group is blocked; see [deployment status](../aks-preparation/STATUS.md). No cluster was created.
+
 # Runtime Fabric deployment templates
 
 **Template-only: nothing is being installed or activated.** All example approval/install flags remain `false`. No active GitHub deployment workflow is configured by this package.

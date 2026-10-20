@@ -1,0 +1,5 @@
+# Private copy only; public example does not approve provisioning.
+admin_object_id = "REPLACE_WITH_ENTRA_OBJECT_ID"
+kubernetes_version = "REPLACE_WITH_OFFERED_PATCH"
+admin_cidrs = ["REPLACE_WITH_ADMIN_IP/32"]
+approved_for_billable_creation = false
